@@ -1,4 +1,5 @@
 <?php
+
 class Linode
 {
     private $curl;
@@ -15,8 +16,18 @@ class Linode
         $this->ApiKey = $ApiKey;
         $this->setCurlOption(CURLOPT_RETURNTRANSFER, true);
         $this->setCurlOption(CURLOPT_VERBOSE, false);
+
+        $caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
+        if (is_dir($caPathOrFile)) {
+            $this->setCurlOption(CURLOPT_CAPATH, $caPathOrFile);
+        } else {
+            $this->setCurlOption(CURLOPT_CAINFO, $caPathOrFile);
+        }
+        $this->setCurlOption(CURLOPT_CONNECTTIMEOUT, 3);
+        $this->setCurlOption(CURLOPT_TIMEOUT, 3);
         $this->setHttpHeader('Content-Type', 'application/json');
         $this->setHttpHeader('Authorization', 'Bearer ' . $this->ApiKey);
+        $this->setHttpHeader('Expect', '');
     }
 
 
@@ -40,7 +51,7 @@ class Linode
 
     protected function get($url)
     {
-        $this->setCurlOption(CURLOPT_URL, $this->baseUrl.'/'.$url);
+        $this->setCurlOption(CURLOPT_URL, $this->baseUrl . '/' . $url);
         $this->setCurlOption(CURLOPT_HTTPGET, true);
         $this->setCurlOption(CURLOPT_CUSTOMREQUEST, 'GET');
 
@@ -50,7 +61,7 @@ class Linode
 
     protected function post($url, $data = null)
     {
-        $this->setCurlOption(CURLOPT_URL, $this->baseUrl.'/'.$url);
+        $this->setCurlOption(CURLOPT_URL, $this->baseUrl . '/' . $url);
         $this->setCurlOption(CURLOPT_POST, true);
         $this->setCurlOption(CURLOPT_CUSTOMREQUEST, 'POST');
         if ($data) {
@@ -63,7 +74,7 @@ class Linode
 
     protected function put($url, $data = null)
     {
-        $this->setCurlOption(CURLOPT_URL, $this->baseUrl.'/'.$url);
+        $this->setCurlOption(CURLOPT_URL, $this->baseUrl . '/' . $url);
         $this->setCurlOption(CURLOPT_HTTPGET, true);
         $this->setCurlOption(CURLOPT_CUSTOMREQUEST, 'PUT');
         if ($data) {
@@ -76,7 +87,7 @@ class Linode
 
     protected function delete($url, $data = null)
     {
-        $this->setCurlOption(CURLOPT_URL, $this->baseUrl.'/'.$url);
+        $this->setCurlOption(CURLOPT_URL, $this->baseUrl . '/' . $url);
         $this->setCurlOption(CURLOPT_HTTPGET, true);
         $this->setCurlOption(CURLOPT_CUSTOMREQUEST, 'DELETE');
         if ($data) {
@@ -92,8 +103,8 @@ class Linode
         $this->setCurlOption(CURLOPT_HTTPHEADER, array_values($this->httpHeader));
         curl_setopt_array($this->curl, $this->curlOptions);
         $response = curl_exec($this->curl);
-        return json_decode($response, true);
         CE_Lib::log(4, 'Linode Response: ' .   $response);
+        return json_decode($response, true);
     }
 
 
@@ -106,14 +117,14 @@ class Linode
 
     public function listInstances($page, $per_page)
     {
-        return $this->get('linode/instances?page='.$page.'&page_size='.$per_page);
+        return $this->get('linode/instances?page=' . $page . '&page_size=' . $per_page);
     }
 
     //Linodes List
 
     public function getListInstance($instanceId = null)
     {
-        return $this->get('linode/instances/'.$instanceId);
+        return $this->get('linode/instances/' . $instanceId);
     }
 
     //List Jobs
@@ -140,12 +151,12 @@ class Linode
     #list all disks
     public function getDiskList($instanceId, $diskId = null)
     {
-        return $this->get('linode/instances/'.$instanceId.'/disks/'.$diskId);
+        return $this->get('linode/instances/' . $instanceId . '/disks/' . $diskId);
     }
 
     public function rescueDisk($instanceId, $data)
     {
-        return $this->post("linode/instances/".$instanceId."/rescue", $data);
+        return $this->post("linode/instances/" . $instanceId . "/rescue", $data);
     }
 
 
@@ -164,45 +175,45 @@ class Linode
     # Get datacenter locations/regions
     public function getDataCenters($region = null)
     {
-        return $this->get('regions/'.$region);
+        return $this->get('regions/' . $region);
     }
 
 
     # Get Templates (All)
     public function getAllTemplates($image = null)
     {
-        return $this->get('images/'.$image);
+        return $this->get('images/' . $image);
     }
 
     # Get Config Lists
     public function getInstanceConfigList($instanceId, $configId = null)
     {
 
-        return $this->get('linode/instances/'.$instanceId.'/configs/'.$configId);
+        return $this->get('linode/instances/' . $instanceId . '/configs/' . $configId);
     }
 
     # Get IP lists (All)
     public function getAllIpList($address = null)
     {
-        return $this->get('networking/ips/'.$address);
+        return $this->get('networking/ips/' . $address);
     }
 
     #Get Ip List By Instance Id
 
     public function getIPListByInstanceId($instanceId, $address = null)
     {
-        return $this->get('linode/instances/'.$instanceId.'/ips/'.$address);
+        return $this->get('linode/instances/' . $instanceId . '/ips/' . $address);
     }
 
     public function deleteIPAddress($instanceId, $address)
     {
-        return $this->delete('linode/instances/'.$instanceId.'/ips/'.$address);
+        return $this->delete('linode/instances/' . $instanceId . '/ips/' . $address);
     }
 
     #getgraph
     public function getinstancegraph($instanceId, $range = null)
     {
-        return $this->get('linode/instances/'.$instanceId.'/stats/'.$range);
+        return $this->get('linode/instances/' . $instanceId . '/stats/' . $range);
     }
 
     //Add IP Address
@@ -213,13 +224,13 @@ class Linode
         } else {
             $data = [  "type" => "ipv4",  "public" => true] ;
         }
-        return $this->post('linode/instances/'.$instanceId.'/ips', $data);
+        return $this->post('linode/instances/' . $instanceId . '/ips', $data);
     }
 
     //Set RDNS
     public function reverseHostname($ipaddressid, $hostname)
     {
-        return $this->put('networking/ips/'.$ipaddressid, ['rdns' => $hostname]);
+        return $this->put('networking/ips/' . $ipaddressid, ['rdns' => $hostname]);
     }
 
     # List Stackscripts
@@ -228,8 +239,8 @@ class Linode
         $result =  $this->get('linode/stackscripts/');
         if ($result['pages'] > 1) {
             $result = array();
-            for ($i=1; $i>=$result['pages']; $i++) {
-                $result[] = $this->get('linode/stackscripts/?page'.$i);
+            for ($i = 1; $i >= $result['pages']; $i++) {
+                $result[] = $this->get('linode/stackscripts/?page' . $i);
             }
         }
         return $result;
@@ -244,7 +255,7 @@ class Linode
             'type' => $planId,
             'label' => $label,
             'backups_enabled' => $backup,
-            "booted"=> true,
+            "booted" => true,
             "image" => $image,
             "private_ip" => $privateIP,
             "swap_size" => $swap_size,
@@ -276,7 +287,7 @@ class Linode
             'filesystem' => $type,
             'size' => (int)$size,
         );
-        return $this->post('linode/instances/'.$instanceId.'/disks', $data);
+        return $this->post('linode/instances/' . $instanceId . '/disks', $data);
     }
 
     # Create Disk
@@ -288,7 +299,7 @@ class Linode
             'size' => $size,
             'root_pass' => $rootPw,
         );
-        return $this->post('linode/instances/'.$instanceId.'/disks', $data);
+        return $this->post('linode/instances/' . $instanceId . '/disks', $data);
     }
 
     #Create Instance Config
@@ -300,101 +311,101 @@ class Linode
             'label' => $label,
             'devices' => $diskList,
         );
-        return $this->post('linode/instances/'.$instanceId.'/configs', $data);
+        return $this->post('linode/instances/' . $instanceId . '/configs', $data);
     }
 
     # Boot Instance
 
     public function bootInstance($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/boot');
+        return $this->post('linode/instances/' . $instanceId . '/boot');
     }
 
     # Reboot Instance
 
     public function rebootInstance($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/reboot');
+        return $this->post('linode/instances/' . $instanceId . '/reboot');
     }
 
     # Shutdown Instance
     public function shutdownInstance($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/shutdown', []);
+        return $this->post('linode/instances/' . $instanceId . '/shutdown', []);
     }
 
 
     # Delete Disk
     public function deleteDisk($instanceId, $diskId)
     {
-        return $this->delete('linode/instances/'.$instanceId.'/disks/'.$diskId, []);
+        return $this->delete('linode/instances/' . $instanceId . '/disks/' . $diskId, []);
     }
 
     # Delete Config
     public function deleteConfig($instanceId, $configId)
     {
-        return $this->delete('linode/instances/'.$instanceId.'/configs/'.$configId, []);
+        return $this->delete('linode/instances/' . $instanceId . '/configs/' . $configId, []);
     }
 
     # Delete instance
     public function deleteinstance($instanceId, $skipChecks = null)
     {
-        return $this->delete('linode/instances/'.$instanceId, ['skipChecks' => $skipChecks]);
+        return $this->delete('linode/instances/' . $instanceId, ['skipChecks' => $skipChecks]);
     }
 
     # Resize instance
     public function resizeinstance($instanceId, $planId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/resize', ['type' => $planId]);
+        return $this->post('linode/instances/' . $instanceId . '/resize', ['type' => $planId]);
     }
 
     #create backup
     public function enablebackup($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/backups/enable');
+        return $this->post('linode/instances/' . $instanceId . '/backups/enable');
     }
 
     # cancel Backup
     public function cancelBackup($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/backups/cancel');
+        return $this->post('linode/instances/' . $instanceId . '/backups/cancel');
     }
 
     # rebuild OS
     public function rebuildinstance($instanceId, $image, $rootPassword)
     {
-        return $this->post('linode/instances/'.$instanceId.'/rebuild', ["image" => $image, "root_pass" => $rootPassword]);
+        return $this->post('linode/instances/' . $instanceId . '/rebuild', ["image" => $image, "root_pass" => $rootPassword]);
     }
 
     # snapshot list
     public function getSnapshotList($instanceId, $snapshotid = null)
     {
-        return $this->get('linode/instances/'.$instanceId.'/backups/'.$snapshotid);
+        return $this->get('linode/instances/' . $instanceId . '/backups/' . $snapshotid);
     }
 
     # Take SnapShot
     public function takeSnapshot($instanceId, $label)
     {
-        return $this->post('linode/instances/'.$instanceId.'/backups', ["label" => $label]);
+        return $this->post('linode/instances/' . $instanceId . '/backups', ["label" => $label]);
     }
 
     # Restore Backup
     public function restoreBackup($instanceId, $backupId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/backups/'.$backupId.'/restore', ["linode_id" => (int)$instanceId, "overwrite"=>true]);
+        return $this->post('linode/instances/' . $instanceId . '/backups/' . $backupId . '/restore', ["linode_id" => (int)$instanceId, "overwrite" => true]);
     }
 
     # update Instance label
 
-    function updateInstanceLabel($instanceId, $label)
+    public function updateInstanceLabel($instanceId, $label)
     {
-        return $this->put('linode/instances/'. $instanceId, ["label"=> str_replace(' ', '', $label)]);
+        return $this->put('linode/instances/' . $instanceId, ["label" => str_replace(' ', '', $label)]);
     }
 
     # Network transfer usages
     public function networktransfer($instanceId)
     {
-        return $this->get('linode/instances/'.$instanceId.'/transfer');
+        return $this->get('linode/instances/' . $instanceId . '/transfer');
     }
 
 
@@ -402,27 +413,26 @@ class Linode
   #Linode's Volumes List
     public function listInstanceVolumes($instanceId)
     {
-        return $this->get('linode/instances/'.$instanceId.'/volumes');
+        return $this->get('linode/instances/' . $instanceId . '/volumes');
     }
 
   #Create Volume
     public function createandattachVolumetoInstance($instanceId, $label, $size)
     {
         $ConfigId = $this->getInstanceConfigList($instanceId)['data'][0]['id'];
-        ;
         $data = array(
-        'label' => $label,
-        'size' => (int)$size,
-        'linode_id' => (int)$instanceId,
-        'config_id' => (int)$ConfigId,
-        'tags' => [],
+            'label' => $label,
+            'size' => (int)$size,
+            'linode_id' => (int)$instanceId,
+            'config_id' => (int)$ConfigId,
+            'tags' => [],
         );
         return $this->post('volumes', $data);
     }
 
     public function singleInstanceVolume($volId)
     {
-        return $this->get('volumes/'.$volId);
+        return $this->get('volumes/' . $volId);
     }
 
 
@@ -435,13 +445,13 @@ class Linode
   #Linode's Volumes detach
     public function detachVolume($volId)
     {
-        return $this->post('volumes/'.$volId.'/detach');
+        return $this->post('volumes/' . $volId . '/detach');
     }
 
   #Linode's Volumes delete
     public function deleteVolume($volId)
     {
-        return $this->delete('volumes/'.$volId);
+        return $this->delete('volumes/' . $volId);
     }
 
   //Volumes
@@ -455,7 +465,7 @@ class Linode
         }
         $instanceId = $postData['instanceId'];
         $diskid = $postData['diskid'];
-        return $this->put('linode/instances/'.$instanceId.'/disks/'.$diskid, $data);
+        return $this->put('linode/instances/' . $instanceId . '/disks/' . $diskid, $data);
     }
 
       # Resize disk
@@ -463,21 +473,47 @@ class Linode
     {
         $instanceId  = $postData['instanceId'];
         $diskid = $postData['diskid'];
-        return $this->post('linode/instances/'.$instanceId.'/disks/'.$diskid.'/resize', ['size' => (int)$postData['size']]);
+        return $this->post('linode/instances/' . $instanceId . '/disks/' . $diskid . '/resize', ['size' => (int)$postData['size']]);
     }
 
       # Reset Root password
     public function updateRootPassword($instanceId, $diskid, $password)
     {
-        return $this->post('linode/instances/'.$instanceId.'/disks/'.$diskid.'/password', ["password" => $password]);
+        return $this->post('linode/instances/' . $instanceId . '/disks/' . $diskid . '/password', ["password" => $password]);
     }
 
-    public function Instancelish_token($instanceId)
+
+
+    public function lishToken($instanceId)
     {
-        return $this->post('linode/instances/'.$instanceId.'/lish_token');
+        $url = "https://cloud.linode.com/api/v4/linode/instances/{$instanceId}/lish_token";
+        $curl = curl_init($url);
+
+        $caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
+        if (is_dir($caPathOrFile)) {
+            curl_setopt($curl, CURLOPT_CAPATH, $caPathOrFile);
+        } else {
+            curl_setopt($curl, CURLOPT_CAINFO, $caPathOrFile);
+        }
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+          'Authorization: Bearer ' . $this->ApiKey,
+          'Content-Type: application/json'
+        ));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, "{}");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($curl);
+        if ($response === false) {
+            CE_Lib::log(4, curl_error($curl));
+            return 'cURL error: ' . curl_error($curl);
+        } else {
+            $responseData = json_decode($response, true);
+            return $responseData['lish_token'];
+        }
+        curl_close($curl);
     }
 
-    public function linode_random_password($len)
+    public function generateRandomPassword($len)
     {
         if ($len < 8) {
             $len = 8;
@@ -508,18 +544,18 @@ class Linode
     public function getDataCentersLabel()
     {
         return [
-                    "ap-west" => 'Mumbai',
-                    "ca-central" => "Toronto",
-                    "ap-southeast" =>"Sydney",
-                    'us-central'=>"Dallas",
-                    "us-west"=>"Fremont",
-                    "us-southeast"=>"Atlanta",
-                    "us-east"=>"Newark",
-                    "eu-west"=>"London",
-                    "ap-south"=>"Singapore",
-                    "eu-central"=>"Frankfurt",
-                    "ap-northeast"=>"Tokyo"
-                  ];
+            "ap-west" => 'Mumbai',
+            "ca-central" => "Toronto",
+            "ap-southeast" => "Sydney",
+            'us-central' => "Dallas",
+            "us-west" => "Fremont",
+            "us-southeast" => "Atlanta",
+            "us-east" => "Newark",
+            "eu-west" => "London",
+            "ap-south" => "Singapore",
+            "eu-central" => "Frankfurt",
+            "ap-northeast" => "Tokyo"
+        ];
     }
 
     public function getDataCentersLabels($region)

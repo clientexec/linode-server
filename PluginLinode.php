@@ -5,7 +5,7 @@ require_once 'Linode.class.php';
 class PluginLinode extends ServerPlugin
 {
     public $features = [
-        'packageName' => true,
+        'packageName' => false,
         'testConnection' => true,
         'showNameservers' => false,
         'directlink' => true
@@ -207,7 +207,7 @@ class PluginLinode extends ServerPlugin
         $vmHostname = $userPackage->getCustomField($args['server']['variables']['plugin_linode_VM_Hostname_Custom_Field'], CUSTOM_FIELDS_FOR_PACKAGE);
         $this->setup($args);
         $osname = $userPackage->getCustomField($args['server']['variables']['plugin_linode_VM_Operating_System_Custom_Field'], CUSTOM_FIELDS_FOR_PACKAGE);
-        $rootPassword = $this->api->linode_random_password(12);
+        $rootPassword = $this->api->generateRandomPassword(12);
         $rebuild = $this->api->rebuildinstance($args['package']['ServerAcctProperties'], 'linode/' . $osname, $rootPassword);
         if (!$rebuild['errors']) {
             $userPackage->setCustomField($args['server']['variables']['plugin_linode_VM_Password_Custom_Field'], $rootPassword, CUSTOM_FIELDS_FOR_PACKAGE);
@@ -250,8 +250,8 @@ class PluginLinode extends ServerPlugin
                 sleep(15);
             }
         }
-                  $InstancePasswords = $this->api->linode_random_password(12);
-                    $DiskInfo = $this->api->getDiskList($args['package']['ServerAcctProperties'])['data'];
+        $InstancePasswords = $this->api->generateRandomPassword(12);
+        $DiskInfo = $this->api->getDiskList($args['package']['ServerAcctProperties'])['data'];
         foreach ($DiskInfo as $diskData) {
             if ($diskData['filesystem'] == 'ext4') {
                 $disklabel = $diskData['id'];
@@ -317,7 +317,7 @@ class PluginLinode extends ServerPlugin
         $location = $userPackage->getCustomField($args['server']['variables']['plugin_linode_VM_Location_Custom_Field'], CUSTOM_FIELDS_FOR_PACKAGE);
         $images = $userPackage->getCustomField($args['server']['variables']['plugin_linode_VM_Operating_System_Custom_Field'], CUSTOM_FIELDS_FOR_PACKAGE);
         $name = $userPackage->getCustomField($args['server']['variables']['plugin_linode_VM_Hostname_Custom_Field'], CUSTOM_FIELDS_FOR_PACKAGE);
-        $rootPassword = $this->api->linode_random_password(12);
+        $rootPassword = $this->api->generateRandomPassword(12);
         $swap = $args['package']['variables']['swap'];
         $plan = $args['package']['variables']['plan'];
         $backup = false;
@@ -343,8 +343,8 @@ class PluginLinode extends ServerPlugin
                     $userPackage->setCustomField($args['server']['variables']['plugin_linode_VM_Password_Custom_Field'], $rootPassword, CUSTOM_FIELDS_FOR_PACKAGE);
                     $userPackage->setCustomField($args['server']['variables']['plugin_linode_VM_IPv6_Custom_Field'], $serverId['ipv6'], CUSTOM_FIELDS_FOR_PACKAGE);
                     $userPackage->setCustomField($args['server']['variables']['plugin_linode_VM_MainIp_Custom_Field'], $serverId['ipv4'][0], CUSTOM_FIELDS_FOR_PACKAGE);
-                            $foundIp = true;
-                            break;
+                    $foundIp = true;
+                    break;
                 } else {
                     CE_Lib::log(4, "Sleeping for four seconds...");
                     sleep(4);
@@ -368,14 +368,13 @@ class PluginLinode extends ServerPlugin
         }
     }
 
-
     public function getDirectLink($userPackage, $getRealLink = true, $fromAdmin = false, $isReseller = false)
     {
         $linkText = $this->user->lang('Web Console');
         $args = $this->buildParams($userPackage);
         $this->setup($args);
         $InstanceInfo = $this->api->getListInstance($args['package']['ServerAcctProperties']);
-        $lish_token = $this->api->Instancelish_token($args['package']['ServerAcctProperties'])['lish_token'];
+        $lish_token = $this->api->lishToken($args['package']['ServerAcctProperties']);
         $getGlishURL =  $this->api->getwebconsoleglish($InstanceInfo['region']);
         $b64Data = base64_encode('host=https://' . $getGlishURL . '&port=8080&encrypt=1&token=' . $lish_token);
 
@@ -408,6 +407,6 @@ class PluginLinode extends ServerPlugin
     {
         $userPackage = new UserPackage($args['userPackageId']);
         $response = $this->getDirectLink($userPackage);
-        return $response['rawlink'];
+        return $response['link'];
     }
 }
